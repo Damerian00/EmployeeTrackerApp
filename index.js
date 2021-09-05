@@ -1,8 +1,62 @@
 const inquirer = require('inquirer');
+// const db = require('./server');
+const sql = require('./index');
+/*|
+  */
+const mysql = require('mysql2');
+const express = require('express');
 
 
+const PORT = process.env.PORT || 3001;
+const app = express();
+
+app.use(express.urlencoded({ extended: false }));
+app.use(express.json());
+
+// Connect to database
+const db = mysql.createConnection(
+  {
+    host: 'localhost',
+    // MySQL username,
+    user: 'root',
+    // TODO: Add MySQL password here
+    password: '',
+    database: 'employees_db'
+  }
+);
+
+db.connect((err) => {
+  if (err){
+    console.log('Error connecting to Db');
+    return;
+  }
+  console.log('Connection Established');
+})
 
 
+// async function viewDepartments (){
+//   try {
+//   app.get('/api/employees', (req, res) => {
+//     const sql = `SELECT employees.id, firstName as First_Name, lastName as Last_Name, roles.title as Title, departments.name as Department, roles.salary, managers.name as Manager_Name
+//     FROM employees
+//     INNER JOIN roles ON roles.id = employees.role_id 
+//     INNER JOIN departments ON departments.id = employees.department_id
+//     INNER JOIN managers ON managers.id = employees.manager_id
+//     ORDER BY employees.id;`;  
+  
+//     console.table(rows)
+   
+//    } );
+// } catch (error) {
+//      res.status(500).json({ error: err.message });
+//      return;
+// }
+
+app.listen(PORT, () => {
+    // console.log(`Server running on port ${PORT}`);
+  });
+/* |  
+ */
 
 init();
 
@@ -44,7 +98,7 @@ askQuestions();
             choices: ['View All Employees', 'Add Employee', 'Update Employee Role',
              'View all Roles', 'Add Role', 'View All Departments', 'Add Department',
             'Quit']
-        },
+        }
        
     ];
     inquirer.prompt(questions).then((answers) => {
@@ -54,45 +108,166 @@ askQuestions();
 }
 
 function moreQuestions(answers){
-    switch (answers.mainMenu) {
-        case 'Add Employee':
-          addEmployee(answers);
-            break;
-        case 'Update Employee Role':
-          updateEmployee(answers);  
-            break;    
-        case 'Add Role':
-           addRole(answers);
-            break;    
-        case 'Add Department':
-            addDepartment(answers); 
-        break;    
-     
-        default:
-            break;
-    }
     if (answers.mainMenu === "Quit"){
-        
+        db.end();
     }else{
-        askQuestions();
+
+        switch (answers.mainMenu) {
+            case 'Add Employee':
+              addEmployee(answers);
+                break;
+            case 'Update Employee Role':
+              updateEmployee(answers);  
+                break;    
+            case 'Add Role':
+               addRole(answers);
+                break;    
+            case 'Add Department':
+                addDepartment(answers); 
+            break;
+            case 'View All Employees':    
+                viewEmployees();
+           
+            break;
+            default:
+
+               break;
+            }
+           
 
     }
+    db.end();
+
 }
 
-function addEmployee (answers){
-    let tempObject = answers;
-    console.log(tempObject);
+function viewEmployees (){
+    const sql = `SELECT employees.id, firstName as First_Name, lastName as Last_Name, roles.title as Title, departments.name as Department, roles.salary, managers.name as Manager_Name
+       FROM employees
+       INNER JOIN roles ON roles.id = employees.role_id 
+       INNER JOIN departments ON departments.id = employees.department_id
+       INNER JOIN managers ON managers.id = employees.manager_id
+       ORDER BY employees.id;`;  
+       db.query(sql, (err, rows) => {
+         if (err) {
+             console.log(err);
+
+           return;
+         }
+         console.log(' ');
+         console.table(rows);
+         console.log(' ');
+
+
+       });
+       askQuestions();
+   }
+function addEmployee (menuChoice){
+
+    let tempObject = menuChoice;
+    
+    const questions = [
+        {
+            type: 'input',
+            name: 'firstName',
+            message: 'What is the Employee\'s first name? :',
+            validate(value) {
+                const fails = value.match(
+                  /([0-9])/i
+                );
+                if (fails || value === "") {
+                    return 'Please enter in a valid name.';
+                 
+                }
+                    return true;
+              },
+              filter(value) {
+                value.toLowerCase();
+                return value.charAt(0).toUpperCase() + value.slice(1);
+              },
+        },
+        {
+            type: 'input',
+            name: 'lastName',
+            message: 'What is the Employee\'s last name? :',
+            validate(value) {
+                const fails = value.match(
+                  /([0-9])/i
+                );
+                if (fails || value === "") {
+                    return 'Please enter in a valid name.';
+                 
+                }
+                    return true;
+              },
+              filter(value) {
+                  value.toLowerCase();
+                return value.charAt(0).toUpperCase() + value.slice(1);
+              },
+        },
+    ];
+    inquirer.prompt(questions).then((answers) => {
+        console.log(`Added ${answers.firstName} ${answers.lastName} to the databse.`);
+        askQuestions();    
+    });
 }
 
-function updateEmployee (answers){
-    let tempObject = answers;
-    console.log(tempObject);
+function updateEmployee (menuChoice){
+    let tempObject = menuChoice;
+    const questions = [
+        {
+            type: 'input',
+            name: 'firstName',
+            message: 'What is the Employee\'s first name? :',
+            validate(value) {
+                const fails = value.match(
+                  /([0-9])/i
+                );
+                if (fails || value === "") {
+                    return 'Please enter in a valid name.';
+                 
+                }
+                    return true;
+              },
+              filter(value) {
+                value.toLowerCase();
+                return value.charAt(0).toUpperCase() + value.slice(1);
+              },
+        },
+        {
+            type: 'input',
+            name: 'lastName',
+            message: 'What is the Employee\'s last name? :',
+            validate(value) {
+                const fails = value.match(
+                  /([0-9])/i
+                );
+                if (fails || value === "") {
+                    return 'Please enter in a valid name.';
+                 
+                }
+                    return true;
+              },
+              filter(value) {
+                  value.toLowerCase();
+                return value.charAt(0).toUpperCase() + value.slice(1);
+              },
+        },
+    ];
+    inquirer.prompt(questions).then((answers) => {
+        console.log(`Added ${answers.firstName} ${answers.lastName} to the databse.`);
+        askQuestions();     
+    });
+   
 }
-function addRole(answers){
-    let tempObject = answers;
-    console.log(tempObject);
+function addRole(menuChoice){
+    let tempObject = menuChoice;
+    console.log(`Added to the database.`);
+    askQuestions();
 }
-function addDepartment(answers){
-    let tempObject = answers;
-    console.log(tempObject);
+function addDepartment(menuChoice){
+    let tempObject = menuChoice;
+    console.log(`Addded to the database.`);
+    askQuestions();
 }
+
+module.exports = sql
