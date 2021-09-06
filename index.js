@@ -379,12 +379,24 @@ function addEmployee (){
               console.log(err);
             } else {
               console.log(`${answers.firstName} ${answers.lastName} was added to the database.`)
-              askQuestions();
             }
           });
         })
-        });  
-    
+        })
+        .then(()=>{
+            
+            if (tempAns.employeeMgr === "Self"){
+                let val = `${tempAns.firstName} ${tempAns.lastName}`;
+                let sql = `INSERT INTO managers (name) VALUE ('${val}')`;
+                db.query(sql, (err, result) => {
+                    if (err) {
+                        console.log(err);
+                    } else {
+                    }
+                });
+            }
+            askQuestions();
+        })    
 
     /* need to push to the database with the information and evaluate the job title to add it's salary to the employeee table*/   
    
