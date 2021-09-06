@@ -22,13 +22,13 @@ VALUES ("Self"),
        ("Tim Wilson"),
        ("Rhea Zhi");
 
-INSERT INTO employees (firstName, lastName, role_id, department_id, salary, manager_id)
-VALUES ("John","Doe",1,2,100000,1),
-       ("Mike","Snow",2,2,50000,2),
-       ("Mary","Cohn",3,3,110000,1),
-       ("Bart","Hairy",4,3,70000,3),
-       ("Tim","Wilson",5,1,90000,1),
-       ("Perth","Berry",6,1,45000,4),
-       ("Rhea","Zhi",7,4,220000,1),
-       ("Ari","Jelly",8,4,120000,5);
+INSERT INTO employees (firstName, lastName, role_id, department_id, manager_id)
+VALUES ("John","Doe",1,2,1),
+       ("Mike","Snow",2,2,2),
+       ("Mary","Cohn",3,3,1),
+       ("Bart","Hairy",4,3,3),
+       ("Tim","Wilson",5,1,1),
+       ("Perth","Berry",6,1,4),
+       ("Rhea","Zhi",7,4,1),
+       ("Ari","Jelly",8,4,5);
 

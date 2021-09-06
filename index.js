@@ -3,6 +3,8 @@ const inquirer = require('inquirer');
 const sql = require('./index');
 let empRoleArr = [];
 let empMgrArr = [];
+let empTitleArr = [];
+let empSalArr = [];
 /*|
   */
 const mysql = require('mysql2');
@@ -111,7 +113,7 @@ askQuestions();
 
 function moreQuestions(answers){
     if (answers.mainMenu === "Quit"){
-        db.end();
+        process.exit(1)
     }else{
 
         switch (answers.mainMenu) {
@@ -131,9 +133,16 @@ function moreQuestions(answers){
             viewEmployees();
             
             break;
-            default:
+            case 'View all Roles':
+            viewRoles();
+            break;
+            case 'View All Departments':
+            viewDepartments();
+            break;
+           default:
+           
                 
-                break;
+            break;
             }
             
             
@@ -144,11 +153,11 @@ function moreQuestions(answers){
 
 function viewEmployees (){
     const sql = `SELECT employees.id, firstName as First_Name, lastName as Last_Name, roles.title as Title, departments.name as Department, roles.salary, managers.name as Manager_Name
-       FROM employees
-       INNER JOIN roles ON roles.id = employees.role_id 
-       INNER JOIN departments ON departments.id = employees.department_id
-       INNER JOIN managers ON managers.id = employees.manager_id
-       ORDER BY employees.id;`;  
+    FROM employees
+    INNER JOIN roles ON roles.id = employees.role_id 
+    INNER JOIN departments ON departments.id = employees.department_id
+    INNER JOIN managers ON managers.id = employees.manager_id
+    ORDER BY employees.id;`;  
        db.query(sql, (err, rows) => {
          if (err) {
              console.log(err);
@@ -159,9 +168,10 @@ function viewEmployees (){
          
 
          console.log(' ');
-        console.log(` 
+        console.log(`
 id  first_name      last_name      title               department                    salary         manager
 --- -------------  --------------  ------------------  --------------------------    -------------- ------------------
+         
          `);
         rows.forEach( (row) =>{
            console.log(`
@@ -173,7 +183,65 @@ ${row.id}    ${row.First_Name}          ${row.Last_Name}            ${row.Title}
        });
         askQuestions();
    }
+
+function viewRoles(){
+    const sql = `SELECT roles.id, roles.title, departments.name as department, salary FROM roles
+    INNER JOIN departments ON departments.id = roles.department_id ORDER BY roles.id;`;  
+    db.query(sql, (err, rows) => {
+      if (err) {
+          console.log(err);
+
+        return;
+      }
+       
+      
+
+      console.log(' ');
+     console.log(` 
+id  title               department                    salary        
+--- -------------      --------------------------    -------------- 
+           `);
+     rows.forEach( (row) =>{
+        console.log(`
+${row.id}    ${row.title}         ${row.department}            ${row.salary}`);
+     }) 
+     console.log(' ');
+         
+
+    });
+     askQuestions();
+}
+
+function viewDepartments(){
+    const sql = `SELECT * FROM departments
+    ORDER BY departments.name;`;  
+    db.query(sql, (err, rows) => {
+      if (err) {
+          console.log(err);
+
+        return;
+      }
+       
+      
+
+      console.log(' ');
+     console.log(` 
+id  department  
+--- -------------`);
+     rows.forEach( (row) =>{
+        console.log(`
+${row.id}    ${row.name}`);
+     }) 
+     console.log(' ');
+         
+
+    });
+     askQuestions();
+
+}
+
 function addEmployee (){
+    let daSalary;
     let sql = `SELECT title as role
     FROM roles
     ORDER BY role;`;  
@@ -254,9 +322,39 @@ function addEmployee (){
     ];
     inquirer.prompt(questions).then((answers) => {
         console.log(`Added ${answers.firstName} ${answers.lastName} to the databse.`);
-            
+        waitForit();    
     });
+
+    /* need to push to the database with the information and evaluate the job title to add it's salary to the employeee table*/   
+   let waitForit = function (){ 
+    sql = `SELECT * FROM roles;`;  
+    db.query(sql, (err, rows) => {
+      if (err) {
+          console.log(err);
+          
+          return;
+         }
+         rows.forEach( (row) =>{
+
+            empTitleArr.push(row.title);
+         }) 
+         
+         console.log(rows[0]);
+     })
+        for (let i = 0; i < empTitleArr.length; i++) {
+            const el = empTitleArr[i];
+            if (el === answers.employeeRole){
+                daSalary = empSalArr[i];
+                i = empTitleArr.length;
+            } else {
+
+            }
+        }
+        // let insert = {firstName: answers.firstName, lastName: answers.lastName,  }
+        // sql = ``  
+    }
 }
+
 
 function updateEmployee (menuChoice){
     let tempObject = menuChoice;
