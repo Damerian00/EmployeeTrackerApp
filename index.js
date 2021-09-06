@@ -446,7 +446,45 @@ function addRole(menuChoice){
 }
 function addDepartment(menuChoice){
     let tempObject = menuChoice;
-    console.log(`Addded to the database.`);
+    const questions = [
+        {
+            type: 'input',
+                name: 'newDep',
+                message: 'What is the name of the department you wish to add? ',
+                validate(value) {
+                    const fails = value.match(
+                        /([0-9])/i
+                        );
+                        if (fails || value === "") {
+                            return 'Please enter in a valid department name.';
+                            
+                        }
+                        return true;
+                    },
+                    filter(value) {
+                        value.toLowerCase();
+                        return value.charAt(0).toUpperCase() + value.slice(1);
+                    },
+        }
+       
+    ];
+    inquirer.prompt(questions).then((answers) => {
+        tempAns = answers;
+    })
+    .then(()=>{
+        console.log(tempAns);
+        let val = tempAns.newDep;
+     let sql = `INSERT INTO departments (name) VALUE ('${val}')`;
+        db.query(sql, (err, result) => {
+            if (err) {
+                console.log(err);
+            } else {
+                console.log(`${val} was added to the database.`)
+                askQuestions();
+            }
+        });
+    })
+    // console.log(`Addded to the database.`);
     // askQuestions();
 }
 
