@@ -4,7 +4,8 @@ const sql = require('./index');
 let empRoleArr = [];
 let empMgrArr = [];
 let empTitleArr = [];
-let empSalArr = [];
+let empDepArr = [];
+let tempAns;
 /*|
   */
 const mysql = require('mysql2');
@@ -168,12 +169,11 @@ function viewEmployees (){
          
 
          console.log(' ');
-        console.log(`
+         console.log(`
 id  first_name      last_name      title               department                    salary         manager
---- -------------  --------------  ------------------  --------------------------    -------------- ------------------
-         
-         `);
-        rows.forEach( (row) =>{
+--- -------------  --------------  ------------------  --------------------------    -------------- ------------------`);
+Object.keys(rows).forEach( function(key) {
+            let row = rows[key]
            console.log(`
 ${row.id}    ${row.First_Name}          ${row.Last_Name}            ${row.Title}             ${row.Department}              ${row.salary}           ${row.Manager_Name}`);
         }) 
@@ -199,11 +199,11 @@ function viewRoles(){
       console.log(' ');
      console.log(` 
 id  title               department                    salary        
---- -------------      --------------------------    -------------- 
-           `);
-     rows.forEach( (row) =>{
+--- -------------      --------------------------    -------------- `);
+Object.keys(rows).forEach( function(key) {
+            let row = rows[key]
         console.log(`
-${row.id}    ${row.title}         ${row.department}            ${row.salary}`);
+${row.id}   ${row.title}             ${row.department}                         ${row.salary}`);
      }) 
      console.log(' ');
          
@@ -228,9 +228,12 @@ function viewDepartments(){
      console.log(` 
 id  department  
 --- -------------`);
-     rows.forEach( (row) =>{
-        console.log(`
-${row.id}    ${row.name}`);
+Object.keys(rows).forEach( function(key) {
+    let row = rows[key]
+    console.log(`${row.id}   ${row.name}`); 
+//         rows.forEach( (row) =>{
+//         console.log(`
+// ${row.id}    ${row.name}`);
      }) 
      console.log(' ');
          
@@ -241,10 +244,12 @@ ${row.id}    ${row.name}`);
 }
 
 function addEmployee (){
-    let daSalary;
-    let sql = `SELECT title as role
-    FROM roles
-    ORDER BY role;`;  
+    let daRole;
+    let daDep;
+    let daMgr;
+    let params;
+    let sql = `SELECT id, title as role
+    FROM roles`;  
        db.query(sql, (err, rows) => {
          if (err) {
              console.log(err);
@@ -253,6 +258,7 @@ function addEmployee (){
             }
             rows.forEach( (row) =>{
                 empRoleArr.push(row.role);
+               
             }) 
         })
         sql = `SELECT name as managerName FROM managers;`;  
@@ -266,7 +272,7 @@ function addEmployee (){
                     empMgrArr.push(row.managerName);
                 }) 
             })
-    
+            
         const questions = [
             {
                 type: 'input',
@@ -321,38 +327,67 @@ function addEmployee (){
         
     ];
     inquirer.prompt(questions).then((answers) => {
-        console.log(`Added ${answers.firstName} ${answers.lastName} to the databse.`);
-        waitForit();    
-    });
-
-    /* need to push to the database with the information and evaluate the job title to add it's salary to the employeee table*/   
-   let waitForit = function (){ 
-    sql = `SELECT * FROM roles;`;  
-    db.query(sql, (err, rows) => {
-      if (err) {
-          console.log(err);
-          
-          return;
-         }
-         rows.forEach( (row) =>{
-
-            empTitleArr.push(row.title);
-         }) 
-         
-         console.log(rows[0]);
-     })
-        for (let i = 0; i < empTitleArr.length; i++) {
-            const el = empTitleArr[i];
+        tempAns = answers;
+        return answers;})
+        
+        
+        .then(()=>{
+            let answers = tempAns;      
+        for (let i = 0; i < empRoleArr.length; i++) {
+            const el = empRoleArr[i];
             if (el === answers.employeeRole){
-                daSalary = empSalArr[i];
-                i = empTitleArr.length;
+                daRole = i+1;
+                i = empRoleArr.length;
             } else {
-
+                
             }
         }
-        // let insert = {firstName: answers.firstName, lastName: answers.lastName,  }
-        // sql = ``  
-    }
+        for (let i = 0; i < empMgrArr.length; i++) {
+            const el = empMgrArr[i];
+            if (el === answers.employeeMgr){
+                daMgr = i+1;
+                i = empMgrArr.length;
+            } else { 
+            }
+            
+        }
+        
+    })
+    .then(() =>{
+        sql = `SELECT departments.id as department
+        FROM roles
+        INNER JOIN departments ON departments.id = roles.department_id
+        WHERE title = \'${tempAns.employeeRole}\';`;
+        db.query(sql, (err, rows) => {
+            if (err) {
+                console.log(err);
+                
+                return;
+            }
+            Object.keys(rows).forEach( function(key) {
+                let row = rows[key]
+                empDepArr.push(row.department);
+                
+            }) 
+            daDep = empDepArr[0];
+            let answers = tempAns;
+            params =  (`\"${answers.firstName}\", \"${answers.lastName}\", \"${daRole}\", \"${daDep}\", \"${daMgr}\"`);
+            
+            sql = `INSERT INTO employees (firstName,lastName,role_id, department_id, manager_id ) VALUES (${params})`;
+           db.query(sql, (err, result) => {
+            if (err) {
+              console.log(err);
+            } else {
+              console.log(`${answers.firstName} ${answers.lastName} was added to the database.`)
+              askQuestions();
+            }
+          });
+        })
+        });  
+    
+
+    /* need to push to the database with the information and evaluate the job title to add it's salary to the employeee table*/   
+   
 }
 
 

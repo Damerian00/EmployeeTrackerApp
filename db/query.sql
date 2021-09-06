@@ -23,5 +23,12 @@
 -- SELECT roles.id, title, departments.name as department, salary FROM roles
 --     INNER JOIN departments ON departments.id = roles.department_id;
 
-SELECT * FROM departments
-    ORDER BY departments.name;    
+-- SELECT * FROM departments
+--     ORDER BY departments.name;    
+
+-- SELECT roles.id, title, departments.name as department, salary FROM roles
+--      INNER JOIN departments ON departments.id = roles.department_id;
+
+SELECT title, departments.name
+FROM roles
+INNER JOIN departments ON departments.id = roles.department_id;
