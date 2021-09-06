@@ -29,6 +29,25 @@
 -- SELECT roles.id, title, departments.name as department, salary FROM roles
 --      INNER JOIN departments ON departments.id = roles.department_id;
 
-SELECT title, departments.name
-FROM roles
-INNER JOIN departments ON departments.id = roles.department_id;
+-- SELECT title, departments.name
+-- FROM roles
+-- INNER JOIN departments ON departments.id = roles.department_id;
+
+-- SELECT departments.id as department
+--         FROM roles
+--         INNER JOIN departments ON departments.id = roles.department_id
+--         WHERE departments.name = "Legal Team Lead";
+
+        -- SELECT departments.id as department
+        -- FROM roles
+        -- INNER JOIN departments ON departments.id = roles.department_id
+        -- WHERE title = "Software Engineer";
+
+        SELECT id
+        FROM departments
+        WHERE name = "Engineering";
+        -- SELECT roles.department_id as department
+        -- FROM departments
+        -- INNER JOIN roles ON roles.department_id = departments.id
+        -- WHERE roles.department_id = \'${tempAns.roleDep}\';
+        -- { newRole: 'Trashman', newSalary: 30000, roleDep: 'Legal' }

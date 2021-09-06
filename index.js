@@ -125,10 +125,10 @@ function moreQuestions(answers){
               updateEmployee(answers);  
                 break;    
             case 'Add Role':
-               addRole(answers);
+               addRole();
                 break;    
             case 'Add Department':
-                addDepartment(answers); 
+                addDepartment(); 
             break;
             case 'View All Employees':    
             viewEmployees();
@@ -439,13 +439,95 @@ function updateEmployee (menuChoice){
     });
    
 }
-function addRole(menuChoice){
-    let tempObject = menuChoice;
-    console.log(`Added to the database.`);
+function addRole(){
+    empDepArr = [];
+    let sql = `SELECT departments.name as department
+    FROM departments`;  
+       db.query(sql, (err, rows) => {
+         if (err) {
+             console.log(err);
+             
+             return;
+            }
+            rows.forEach( (row) =>{
+                empDepArr.push(row.department);
+               
+            }) 
+        })
+    const questions = [
+        {
+            type: 'input',
+                name: 'newRole',
+                message: 'What is the name of the role you wish to add? ',
+                validate(value) {
+                    const fails = value.match(
+                        /([0-9])/i
+                        );
+                        if (fails || value === "") {
+                            return 'Please enter in a valid role.';
+                            
+                        }
+                        return true;
+                    },
+                    filter(value) {
+                        value.toLowerCase();
+                        return value.charAt(0).toUpperCase() + value.slice(1);
+                    },
+                    
+        },
+        {
+            type: 'number',
+                name: 'newSalary',
+                message: 'What is the salary amount? ',
+        },
+        {
+            type: 'list',
+            name: 'roleDep',
+            message: 'Which department doe the role belong to? ',
+            choices: empDepArr,
+        },
+       
+    ];
+    inquirer.prompt(questions).then((answers) => {
+        tempAns = answers;
+    })
+    .then(() =>{
+        let tempArr = [];
+        console.log('time for an sql')
+        console.log(tempAns);
+     let sql = ` SELECT id
+        FROM departments
+        WHERE name = \'${tempAns.roleDep}\';`;
+        db.query(sql, (err, rows) => {
+            if (err) {
+                console.log(err);
+                
+                return;
+            }
+            Object.keys(rows).forEach( function(key) {
+                let row = rows[key]
+                tempArr.push(row.id);
+                console.log(tempArr[0]);
+                
+            }) 
+            daDep = tempArr[0];
+            let answers = tempAns;
+            params =  (`\"${answers.newRole}\", \"${daDep}\", \"${answers.newSalary}\"`);
+            
+            sql = `INSERT INTO roles (title, department_id, salary) VALUES (${params})`;
+           db.query(sql, (err, result) => {
+            if (err) {
+              console.log(err);
+            } else {
+              console.log(`${answers.newRole} was added to the database.`)
+              askQuestions();
+            }
+          });
+        })
+        });  
     // askQuestions();
 }
-function addDepartment(menuChoice){
-    let tempObject = menuChoice;
+function addDepartment(){
     const questions = [
         {
             type: 'input',
@@ -472,7 +554,6 @@ function addDepartment(menuChoice){
         tempAns = answers;
     })
     .then(()=>{
-        console.log(tempAns);
         let val = tempAns.newDep;
      let sql = `INSERT INTO departments (name) VALUE ('${val}')`;
         db.query(sql, (err, result) => {
