@@ -43,11 +43,26 @@
         -- INNER JOIN departments ON departments.id = roles.department_id
         -- WHERE title = "Software Engineer";
 
-        SELECT id
-        FROM departments
-        WHERE name = "Engineering";
+        -- SELECT id
+        -- FROM departments
+        -- WHERE name = "Engineering";
+
         -- SELECT roles.department_id as department
         -- FROM departments
         -- INNER JOIN roles ON roles.department_id = departments.id
         -- WHERE roles.department_id = \'${tempAns.roleDep}\';
         -- { newRole: 'Trashman', newSalary: 30000, roleDep: 'Legal' }
+
+        Select concat(firstName, " ", lastName) as employeeName
+        FROM employees;
+
+        -- need to find employee id and role id
+
+        -- SELECT firstName
+        -- FROM employees
+        -- WHERE id  = "1";
+
+        -- SELECT role_id 
+        -- FROM employees
+        -- INNER JOIN roles ON roles.id = employees.role_id
+        -- WHERE roles.title = "Salesman";

@@ -3,7 +3,7 @@ const inquirer = require('inquirer');
 const sql = require('./index');
 let empRoleArr = [];
 let empMgrArr = [];
-let empTitleArr = [];
+let empNameArr = [];
 let empDepArr = [];
 let tempAns;
 /*|
@@ -35,7 +35,7 @@ db.connect((err) => {
     console.log('Error connecting to Db');
     return;
   }
-  console.log('Connection Established');
+//   console.log('Connection Established');
 })
 
 
@@ -140,6 +140,9 @@ function moreQuestions(answers){
             case 'View All Departments':
             viewDepartments();
             break;
+            case 'Update Employee Role':
+            updateEmployee();
+            break;
            default:
            
                 
@@ -181,6 +184,7 @@ ${row.id}    ${row.First_Name}          ${row.Last_Name}            ${row.Title}
             
 
        });
+       
         askQuestions();
    }
 
@@ -397,60 +401,122 @@ function addEmployee (){
             }
             askQuestions();
         })    
-
-    /* need to push to the database with the information and evaluate the job title to add it's salary to the employeee table*/   
-   
+  
 }
 
 
-function updateEmployee (menuChoice){
-    let tempObject = menuChoice;
+function updateEmployee (){
+let nameId;
+let tempRole; 
+let  sql = `Select concat(firstName, " ", lastName) as employeeName
+FROM employees;`;
+db.query(sql, (err, rows) => {
+    if (err) {
+        console.log(err);
+        
+        return;
+       }
+       rows.forEach( (row) =>{
+        empNameArr.push(row.employeeName);
+        
+    }) 
+   })
+    sql = `SELECT id, title as role
+    FROM roles`;  
+       db.query(sql, (err, rows) => {
+         if (err) {
+             console.log(err);
+             
+             return;
+            }
+            rows.forEach( (row) =>{
+                empRoleArr.push(row.role);
+                
+            })
+        })
+        
     const questions = [
         {
             type: 'input',
-            name: 'firstName',
-            message: 'What is the Employee\'s first name? :',
+            name: 'yesTest',
+            message: 'is this a test type yes? :',
             validate(value) {
                 const fails = value.match(
-                  /([0-9])/i
-                );
-                if (fails || value === "") {
-                    return 'Please enter in a valid name.';
-                 
-                }
+                    /([0-9])/i
+                    );
+                    if (fails || value === "") {
+                        return 'Please enter in a valid name.';
+                        
+                    }
                     return true;
-              },
-              filter(value) {
-                value.toLowerCase();
-                return value.charAt(0).toUpperCase() + value.slice(1);
-              },
+                },
+                filter(value) {
+                    value.toLowerCase();
+                    return value.charAt(0).toUpperCase() + value.slice(1);
+                },
+            },
+        {
+            type: 'list',
+            name: 'updateName',
+            message: 'Which employee\'s role would you like to update? ',
+            choices: empNameArr,
         },
         {
-            type: 'input',
-            name: 'lastName',
-            message: 'What is the Employee\'s last name? :',
-            validate(value) {
-                const fails = value.match(
-                  /([0-9])/i
-                );
-                if (fails || value === "") {
-                    return 'Please enter in a valid name.';
-                 
-                }
-                    return true;
-              },
-              filter(value) {
-                  value.toLowerCase();
-                return value.charAt(0).toUpperCase() + value.slice(1);
-              },
+            type: 'list',
+            name: 'updateRole',
+            message: 'What is the employee\'s role? ',
+            choices: empRoleArr,
         },
+       
     ];
     inquirer.prompt(questions).then((answers) => {
-        console.log(`Updated ${answers.firstName} ${answers.lastName} the databse.`);
-        // askQuestions();     
-    });
+        tempAns = answers;
+        return answers;})      
+     .then(() => {
+         let answers = tempAns;
+        for (let i = 0; i < empNameArr.length; i++) {
+            const el = empNameArr[i];
+            if (el === answers.updateName){
+                nameId = i+1;
+                i = empNameArr.length;
+            }
+            
+     
+        } 
+    let tempArr = []
+              
+      sql = `SELECT role_id 
+        FROM employees
+        INNER JOIN roles ON roles.id = employees.role_id
+        WHERE roles.title = \'${answers.updateRole}\';`;
+        db.query(sql, (err, rows) => {
+            if (err) {
+                console.log(err);
+                
+                return;
+               }
+               rows.forEach( (row) =>{
+                   tempArr.push(row.role_id);
+                    tempRole = tempArr[0];                  
+                    console.log(tempRole);
+                }) 
+            })
+            params = [tempRole , nameId]
+        sql = `UPDATE FROM employees SET role_id = ? WHERE ID = ?`;
+                db.query(sql, params, (err, result) => {
+                    if (err) {
+                        console.log(err);
+                    } else {
+                    }
+                });
+        
+        
+        console.log(`Updated ${answers.updateName}'s role.`);
+        askQuestions();     
+    })
    
 }
+
 function addRole(){
     empDepArr = [];
     let sql = `SELECT departments.name as department
@@ -488,7 +554,7 @@ function addRole(){
                     
         },
         {
-            type: 'number',
+                type: 'number',
                 name: 'newSalary',
                 message: 'What is the salary amount? ',
         },
@@ -505,8 +571,6 @@ function addRole(){
     })
     .then(() =>{
         let tempArr = [];
-        console.log('time for an sql')
-        console.log(tempAns);
      let sql = ` SELECT id
         FROM departments
         WHERE name = \'${tempAns.roleDep}\';`;
@@ -519,7 +583,6 @@ function addRole(){
             Object.keys(rows).forEach( function(key) {
                 let row = rows[key]
                 tempArr.push(row.id);
-                console.log(tempArr[0]);
                 
             }) 
             daDep = tempArr[0];
