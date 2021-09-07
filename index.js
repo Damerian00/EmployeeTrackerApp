@@ -523,46 +523,33 @@ function addRole(){
         });  
     // askQuestions();
 }
-function addDepartment(){
-    const questions = [
-        {
-            type: 'input',
-                name: 'newDep',
-                message: 'What is the name of the department you wish to add? ',
-                validate(value) {
-                    const fails = value.match(
-                        /([0-9])/i
-                        );
-                        if (fails || value === "") {
-                            return 'Please enter in a valid department name.';
-                            
-                        }
-                        return true;
-                    },
-                    filter(value) {
-                        value.toLowerCase();
-                        return value.charAt(0).toUpperCase() + value.slice(1);
-                    },
-        }
-       
-    ];
-    inquirer.prompt(questions).then((answers) => {
-        tempAns = answers;
-    })
-    .then(()=>{
-        let val = tempAns.newDep;
-     let sql = `INSERT INTO departments (name) VALUE ('${val}')`;
-        db.query(sql, (err, result) => {
-            if (err) {
-                console.log(err);
-            } else {
-                console.log(`${val} was added to the database.`)
-                askQuestions();
-            }
-        });
-    })
-    // console.log(`Addded to the database.`);
-    // askQuestions();
+async function addDepartment(){
+    try {
+       const newDep = await inquirer.prompt({
+           type: 'input',
+           name: 'name',
+           message: 'What is the name of the department you wish to add? ',
+           validate(value) {
+               const fails = value.match(
+                   /([0-9])/i
+                   );
+                   if (fails || value === "") {
+                       return 'Please enter in a valid department name.';
+                       
+                   }
+                   return true;
+               },
+               filter(value) {
+                   value.toLowerCase();
+                   return value.charAt(0).toUpperCase() + value.slice(1);
+               }, 
+           })
+           
+           db.query(`INSERT INTO departments (name) VALUE ('${newDep.name}');`)
+       } catch (err) {
+           console.log(err);
+           process.exit(1);
+       }
+       askQuestions();
 }
 
-module.exports = sql
