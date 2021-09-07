@@ -53,8 +53,8 @@
         -- WHERE roles.department_id = \'${tempAns.roleDep}\';
         -- { newRole: 'Trashman', newSalary: 30000, roleDep: 'Legal' }
 
-        Select concat(firstName, " ", lastName) as employeeName
-        FROM employees;
+        -- Select concat(firstName, " ", lastName) as employeeName
+        -- FROM employees;
 
         -- need to find employee id and role id
 
@@ -66,3 +66,7 @@
         -- FROM employees
         -- INNER JOIN roles ON roles.id = employees.role_id
         -- WHERE roles.title = "Salesman";
+
+        Select id
+        FROM employees
+        WHERE concat(firstName, " ", lastName)  = "John Doe";

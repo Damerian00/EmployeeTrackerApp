@@ -168,24 +168,19 @@ function viewEmployees (){
 
            return;
          }
-          
-         
 
-         console.log(' ');
          console.log(`
 id  first_name      last_name      title               department                    salary         manager
 --- -------------  --------------  ------------------  --------------------------    -------------- ------------------`);
 Object.keys(rows).forEach( function(key) {
             let row = rows[key]
-           console.log(`
+           console.table(`
 ${row.id}    ${row.First_Name}          ${row.Last_Name}            ${row.Title}             ${row.Department}              ${row.salary}           ${row.Manager_Name}`);
         }) 
         console.log(' ');
-            
-
+        askQuestions();
        });
        
-        askQuestions();
    }
 
 function viewRoles(){
@@ -200,20 +195,17 @@ function viewRoles(){
        
       
 
-      console.log(' ');
      console.log(` 
 id  title               department                    salary        
 --- -------------      --------------------------    -------------- `);
 Object.keys(rows).forEach( function(key) {
             let row = rows[key]
-        console.log(`
+        console.table(`
 ${row.id}   ${row.title}             ${row.department}                         ${row.salary}`);
      }) 
      console.log(' ');
-         
-
-    });
      askQuestions();
+    });
 }
 
 function viewDepartments(){
@@ -234,7 +226,7 @@ id  department
 --- -------------`);
 Object.keys(rows).forEach( function(key) {
     let row = rows[key]
-    console.log(`${row.id}   ${row.name}`); 
+    console.table(`${row.id}   ${row.name}`); 
 //         rows.forEach( (row) =>{
 //         console.log(`
 // ${row.id}    ${row.name}`);
@@ -242,8 +234,8 @@ Object.keys(rows).forEach( function(key) {
      console.log(' ');
          
 
-    });
      askQuestions();
+    });
 
 }
 
@@ -333,7 +325,7 @@ function addEmployee (){
     inquirer.prompt(questions).then((answers) => {
         tempAns = answers;
         return answers;})
-        
+   
         
         .then(()=>{
             let answers = tempAns;      
@@ -405,115 +397,44 @@ function addEmployee (){
 }
 
 
-function updateEmployee (){
-let nameId;
-let tempRole; 
-let  sql = `Select concat(firstName, " ", lastName) as employeeName
-FROM employees;`;
-db.query(sql, (err, rows) => {
-    if (err) {
-        console.log(err);
+async function updateEmployee (){
+    try {
         
-        return;
-       }
-       rows.forEach( (row) =>{
-        empNameArr.push(row.employeeName);
-        
-    }) 
-   })
-    sql = `SELECT id, title as role
-    FROM roles`;  
-       db.query(sql, (err, rows) => {
-         if (err) {
-             console.log(err);
-             
-             return;
-            }
-            rows.forEach( (row) =>{
-                empRoleArr.push(row.role);
-                
-            })
-        })
-        
-    const questions = [
-        {
-            type: 'input',
-            name: 'yesTest',
-            message: 'is this a test type yes? :',
-            validate(value) {
-                const fails = value.match(
-                    /([0-9])/i
-                    );
-                    if (fails || value === "") {
-                        return 'Please enter in a valid name.';
-                        
-                    }
-                    return true;
-                },
-                filter(value) {
-                    value.toLowerCase();
-                    return value.charAt(0).toUpperCase() + value.slice(1);
-                },
-            },
-        {
+        const [empNames] = await db.query(`Select concat(firstName, " ", lastName) as employeeName, id
+        FROM employees;`);
+        const {upEmp} = await inquirer.prompt({
+            name: 'upEmp',
             type: 'list',
-            name: 'updateName',
             message: 'Which employee\'s role would you like to update? ',
-            choices: empNameArr,
-        },
-        {
+            choices: empNames.map(empName => ({name: empName.employeeName, value: empName}) )
+        })
+        console.log(upEmp.employeeName);
+         const [empRoles] = await db.query(`SELECT id, title as role
+         FROM roles;`); 
+         const {upRole} = await inquirer.prompt({
+            name: 'upRole',
             type: 'list',
-            name: 'updateRole',
-            message: 'What is the employee\'s role? ',
-            choices: empRoleArr,
-        },
-       
-    ];
-    inquirer.prompt(questions).then((answers) => {
-        tempAns = answers;
-        return answers;})      
-     .then(() => {
-         let answers = tempAns;
-        for (let i = 0; i < empNameArr.length; i++) {
-            const el = empNameArr[i];
-            if (el === answers.updateName){
-                nameId = i+1;
-                i = empNameArr.length;
-            }
-            
-     
-        } 
-    let tempArr = []
-              
-      sql = `SELECT role_id 
+            message: 'What is the employee\'s new role? ',
+            choices: empRoles.map(empRole => ({name: empRole.role, value: empRole}) )
+        })
+       saveRole = await upRole.role;
+        console.log(saveRole);
+        const evalInput = await db.query(`SELECT id
+        FROM roles
+        WHERE roles.title = \'${upRole.role}\';`);
+        let nameId = await db.query(`Select id
         FROM employees
-        INNER JOIN roles ON roles.id = employees.role_id
-        WHERE roles.title = \'${answers.updateRole}\';`;
-        db.query(sql, (err, rows) => {
-            if (err) {
-                console.log(err);
-                
-                return;
-               }
-               rows.forEach( (row) =>{
-                   tempArr.push(row.role_id);
-                    tempRole = tempArr[0];                  
-                    console.log(tempRole);
-                }) 
-            })
-            params = [tempRole , nameId]
-        sql = `UPDATE FROM employees SET role_id = ? WHERE ID = ?`;
-                db.query(sql, params, (err, result) => {
-                    if (err) {
-                        console.log(err);
-                    } else {
-                    }
-                });
-        
-        
+        WHERE concat(firstName, " ", lastName)  = "${upEmp.employeeName}";`);
+        await db.query(`UPDATE employees SET role_id = ${evalInput[0][0].id} WHERE ID = ${nameId[0][0].id};`)
+
+
         console.log(`Updated ${answers.updateName}'s role.`);
+    } catch (err) {
+        console.log(err);
+        process.exit(1);
+    } 
         askQuestions();     
-    })
+    
    
 }
 
