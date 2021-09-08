@@ -83,4 +83,5 @@ INNER JOIN roles ON roles.id = employees.role_id
 INNER JOIN departments ON departments.id = employees.department_id
 INNER JOIN managers ON managers.id = employees.manager_id
 ORDER BY employees.id;
-        
+
+INSERT INTO managers (name) VALUE (${aName});

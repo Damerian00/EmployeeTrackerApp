@@ -219,7 +219,11 @@ async function addEmployee (){
                  const roleId =  await db.query(`SELECT id FROM roles WHERE title = \'${empRole.role}\'; `)
                  params =  await (`\"${fName.firstName}\", \"${lName.lastName}\", \"${roleId[0][0].id}\", \"${dptId[0][0].department}\", \"${mgrId[0][0].id}\"`);
                  await db.query(`INSERT INTO employees (firstName,lastName,role_id, department_id, manager_id ) VALUES (${params});`);
-                 console.log(`${fName.firstName} ${lName.lastName} was added to the database.`)    
+                 console.log(`${fName.firstName} ${lName.lastName} was added to the database.`)
+                 if (mgrName.managerName === "Self"){
+                    const aName = `${fName.firstName} ${lName.lastName}`
+                    await db.query(`INSERT INTO managers (name) VALUE ('${aName}');`);   
+                 }     
              } catch (err) {
                   console.log(err);
                   process.exit(1);
