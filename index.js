@@ -13,11 +13,10 @@ let db;
   */
 
 dbInit();
-init();
 async function dbInit(){
     try {
         // Connect to database
-   db = mysql.createConnection(
+   db = await mysql.createConnection(
       {
         host: 'localhost',
         // MySQL username,
@@ -27,9 +26,9 @@ async function dbInit(){
         database: 'employees_db'
       }
     );
-      await db.connect();
+      init();
   } catch (err) {
-          console.log('Error connecting to Db');
+          console.log(err);
          
         }
       //   console.log('Connection Established');
@@ -132,88 +131,33 @@ function moreQuestions(answers){
 
 }
 
-function viewEmployees (){
+async function viewEmployees (){
     const sql = `SELECT employees.id, firstName as First_Name, lastName as Last_Name, roles.title as Title, departments.name as Department, roles.salary, managers.name as Manager_Name
     FROM employees
     INNER JOIN roles ON roles.id = employees.role_id 
     INNER JOIN departments ON departments.id = employees.department_id
     INNER JOIN managers ON managers.id = employees.manager_id
     ORDER BY employees.id;`;  
-       db.query(sql, (err, rows) => {
-         if (err) {
-             console.log(err);
-
-           return;
-         }
-
-         console.log(`
-id  first_name      last_name      title               department                    salary         manager
---- -------------  --------------  ------------------  --------------------------    -------------- ------------------`);
-Object.keys(rows).forEach( function(key) {
-            let row = rows[key]
-           console.table(`
-${row.id}    ${row.First_Name}          ${row.Last_Name}            ${row.Title}             ${row.Department}              ${row.salary}           ${row.Manager_Name}`);
-        }) 
-        console.log(' ');
-        askQuestions();
-       });
-       
+    const [rows, fields] = await db.query(sql)
+ 
+       console.table(rows);
+       askQuestions();
    }
 
-function viewRoles(){
+async function viewRoles(){
     const sql = `SELECT roles.id, roles.title, departments.name as department, salary FROM roles
     INNER JOIN departments ON departments.id = roles.department_id ORDER BY roles.id;`;  
-    db.query(sql, (err, rows) => {
-      if (err) {
-          console.log(err);
-
-        return;
-      }
-       
-      
-
-     console.log(` 
-id  title               department                    salary        
---- -------------      --------------------------    -------------- `);
-Object.keys(rows).forEach( function(key) {
-            let row = rows[key]
-        console.table(`
-${row.id}   ${row.title}             ${row.department}                         ${row.salary}`);
-     }) 
-     console.log(' ');
+    const [rows, fields] = await db.query(sql)
+     console.table(rows);
      askQuestions();
-    });
 }
 
-function viewDepartments(){
+async function viewDepartments(){
     const sql = `SELECT * FROM departments
     ORDER BY departments.name;`;  
-    db.query(sql, (err, rows) => {
-      if (err) {
-          console.log(err);
-
-        return;
-      }
-       
-      
-
-      console.log(' ');
-     console.log(` 
-id  department  
---- -------------`);
-Object.keys(rows).forEach( function(key) {
-    let row = rows[key]
-    console.table(`${row.id}   ${row.name}`); 
-//         rows.forEach( (row) =>{
-//         console.log(`
-// ${row.id}    ${row.name}`);
-     }) 
-     console.log(' ');
-         
-
+    const [rows, fields] = await db.query(sql)
+     console.table(rows);
      askQuestions();
-    });
-
 }
 
 async function addEmployee (){
@@ -316,7 +260,7 @@ async function updateEmployee (){
         await db.query(`UPDATE employees SET role_id = ${evalInput[0][0].id} WHERE ID = ${nameId[0][0].id};`)
 
 
-        console.log(`Updated ${answers.updateName}'s role.`);
+        console.log(`Updated ${upEmp.employeeName}'s role.`);
     } catch (err) {
         console.log(err);
         process.exit(1);
