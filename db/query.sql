@@ -67,6 +67,13 @@
         -- INNER JOIN roles ON roles.id = employees.role_id
         -- WHERE roles.title = "Salesman";
 
-        Select id
-        FROM employees
-        WHERE concat(firstName, " ", lastName)  = "John Doe";
+        -- Select id
+        -- FROM employees
+        -- WHERE concat(firstName, " ", lastName)  = "John Doe";
+
+
+SELECT departments.id as department
+FROM roles
+INNER JOIN departments ON departments.id = roles.department_id
+WHERE title = 'lawyer';
+        

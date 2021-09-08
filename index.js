@@ -1,61 +1,41 @@
 const inquirer = require('inquirer');
 // const db = require('./server');
 const sql = require('./index');
-let empRoleArr = [];
-let empMgrArr = [];
-let empNameArr = [];
-let empDepArr = [];
-let tempAns;
-/*|
-  */
-const mysql = require('mysql2');
+const mysql = require('mysql2/promise');
 const express = require('express');
-
-
 const PORT = process.env.PORT || 3001;
 const app = express();
 
 app.use(express.urlencoded({ extended: false }));
 app.use(express.json());
+let db;
+/*|
+  */
 
-// Connect to database
-const db = mysql.createConnection(
-  {
-    host: 'localhost',
-    // MySQL username,
-    user: 'root',
-    // TODO: Add MySQL password here
-    password: '',
-    database: 'employees_db'
-  }
-);
+dbInit();
+init();
+async function dbInit(){
+    try {
+        // Connect to database
+   db = mysql.createConnection(
+      {
+        host: 'localhost',
+        // MySQL username,
+        user: 'root',
+        // TODO: Add MySQL password here
+        password: '',
+        database: 'employees_db'
+      }
+    );
+      await db.connect();
+  } catch (err) {
+          console.log('Error connecting to Db');
+         
+        }
+      //   console.log('Connection Established');
+      }
 
-db.connect((err) => {
-  if (err){
-    console.log('Error connecting to Db');
-    return;
-  }
-//   console.log('Connection Established');
-})
 
-
-// async function viewDepartments (){
-//   try {
-//   app.get('/api/employees', (req, res) => {
-//     const sql = `SELECT employees.id, firstName as First_Name, lastName as Last_Name, roles.title as Title, departments.name as Department, roles.salary, managers.name as Manager_Name
-//     FROM employees
-//     INNER JOIN roles ON roles.id = employees.role_id 
-//     INNER JOIN departments ON departments.id = employees.department_id
-//     INNER JOIN managers ON managers.id = employees.manager_id
-//     ORDER BY employees.id;`;  
-  
-//     console.table(rows)
-   
-//    } );
-// } catch (error) {
-//      res.status(500).json({ error: err.message });
-//      return;
-// }
 
 app.listen(PORT, () => {
     // console.log(`Server running on port ${PORT}`);
@@ -63,7 +43,7 @@ app.listen(PORT, () => {
 /* |  
  */
 
-init();
+
 
 function init (){
 console.log(
@@ -122,7 +102,7 @@ function moreQuestions(answers){
               addEmployee();
                 break;
             case 'Update Employee Role':
-              updateEmployee(answers);  
+              updateEmployee();  
                 break;    
             case 'Add Role':
                addRole();
@@ -131,19 +111,16 @@ function moreQuestions(answers){
                 addDepartment(); 
             break;
             case 'View All Employees':    
-            viewEmployees();
+                viewEmployees();
             
             break;
             case 'View all Roles':
-            viewRoles();
+                viewRoles();
             break;
             case 'View All Departments':
-            viewDepartments();
+                viewDepartments();
             break;
-            case 'Update Employee Role':
-            updateEmployee();
-            break;
-           default:
+            default:
            
                 
             break;
@@ -239,167 +216,78 @@ Object.keys(rows).forEach( function(key) {
 
 }
 
-function addEmployee (){
-    let daRole;
-    let daDep;
-    let daMgr;
-    let params;
-    let sql = `SELECT id, title as role
-    FROM roles`;  
-       db.query(sql, (err, rows) => {
-         if (err) {
-             console.log(err);
-             
-             return;
-            }
-            rows.forEach( (row) =>{
-                empRoleArr.push(row.role);
-               
-            }) 
-        })
-        sql = `SELECT name as managerName FROM managers;`;  
-           db.query(sql, (err, rows) => {
-             if (err) {
-                 console.log(err);
-                 
-                 return;
-                }
-                rows.forEach( (row) =>{
-                    empMgrArr.push(row.managerName);
-                }) 
-            })
-            
-        const questions = [
-            {
-                type: 'input',
-                name: 'firstName',
-                message: 'What is the Employee\'s first name? :',
-                validate(value) {
-                    const fails = value.match(
-                        /([0-9])/i
-                        );
-                        if (fails || value === "") {
-                            return 'Please enter in a valid name.';
-                            
-                        }
-                        return true;
-                    },
-                    filter(value) {
-                        value.toLowerCase();
-                        return value.charAt(0).toUpperCase() + value.slice(1);
-                    },
-                },
-                {
-                    type: 'input',
-                    name: 'lastName',
-                    message: 'What is the Employee\'s last name? :',
-                    validate(value) {
-                        const fails = value.match(
-                            /([0-9])/i
-                            );
-                            if (fails || value === "") {
-                                return 'Please enter in a valid name.';
-                                
-                            }
-                            return true;
-                        },
-                        filter(value) {
-                            value.toLowerCase();
-                            return value.charAt(0).toUpperCase() + value.slice(1);
-                        },
-        },
-        {
-            type: 'list',
-            name: 'employeeRole',
-            message: 'What is the Employee\'s role? :',
-            choices: empRoleArr,
-        },
-        {
-            type: 'list',
-            name: 'employeeMgr',
-            message: 'Who is the Employee\'s manager? Use self if they are the manager. :',
-            choices: empMgrArr,
-        },
-        
-    ];
-    inquirer.prompt(questions).then((answers) => {
-        tempAns = answers;
-        return answers;})
-   
-        
-        .then(()=>{
-            let answers = tempAns;      
-        for (let i = 0; i < empRoleArr.length; i++) {
-            const el = empRoleArr[i];
-            if (el === answers.employeeRole){
-                daRole = i+1;
-                i = empRoleArr.length;
-            } else {
-                
-            }
-        }
-        for (let i = 0; i < empMgrArr.length; i++) {
-            const el = empMgrArr[i];
-            if (el === answers.employeeMgr){
-                daMgr = i+1;
-                i = empMgrArr.length;
-            } else { 
-            }
-            
-        }
-        
-    })
-    .then(() =>{
-        sql = `SELECT departments.id as department
-        FROM roles
-        INNER JOIN departments ON departments.id = roles.department_id
-        WHERE title = \'${tempAns.employeeRole}\';`;
-        db.query(sql, (err, rows) => {
-            if (err) {
-                console.log(err);
-                
-                return;
-            }
-            Object.keys(rows).forEach( function(key) {
-                let row = rows[key]
-                empDepArr.push(row.department);
-                
-            }) 
-            daDep = empDepArr[0];
-            let answers = tempAns;
-            params =  (`\"${answers.firstName}\", \"${answers.lastName}\", \"${daRole}\", \"${daDep}\", \"${daMgr}\"`);
-            
-            sql = `INSERT INTO employees (firstName,lastName,role_id, department_id, manager_id ) VALUES (${params})`;
-           db.query(sql, (err, result) => {
-            if (err) {
-              console.log(err);
-            } else {
-              console.log(`${answers.firstName} ${answers.lastName} was added to the database.`)
-            }
-          });
-        })
-        })
-        .then(()=>{
-            
-            if (tempAns.employeeMgr === "Self"){
-                let val = `${tempAns.firstName} ${tempAns.lastName}`;
-                let sql = `INSERT INTO managers (name) VALUE ('${val}')`;
-                db.query(sql, (err, result) => {
-                    if (err) {
-                        console.log(err);
-                    } else {
-                    }
-                });
-            }
-            askQuestions();
-        })    
-  
-}
+async function addEmployee (){
+    try {
+             const fName = await inquirer.prompt({
+                 type: 'input',
+                 name: 'firstName',
+                 message: 'What is the Employee\'s first name? ',
+                 validate(value) {
+                     const fails = value.match(
+                         /([0-9])/i
+                         );
+                         if (fails || value === "") {
+                             return 'Please enter in a valid name.';
+                         }
+                         return true;
+                     },
+                     filter(value) {
+                         value.toLowerCase();
+                         return value.charAt(0).toUpperCase() + value.slice(1);
+                     }, 
+                 })
+                 const lName = await inquirer.prompt({
+                     type: 'input',
+                     name: 'lastName',
+                     message: 'What is the Employee\'s last name? ',
+                     validate(value) {
+                         const fails = value.match(
+                             /([0-9])/i
+                             );
+                             if (fails || value === "") {
+                                 return 'Please enter in a valid name.';
+                             }
+                             return true;
+                         },
+                         filter(value) {
+                             value.toLowerCase();
+                             return value.charAt(0).toUpperCase() + value.slice(1);
+                         }, 
+                     })
+                     const [roles] = await db.query(`SELECT id, title as role
+     FROM roles`);
+                 const {empRole} = await inquirer.prompt({
+                     name: 'empRole',
+                     type: 'list',
+                     message: 'What is the Employee\'s role?  ',
+                     choices: roles.map(role => ({name: role.role, value: role}) )
+                 })
+                 const [mgrs] = await db.query(`SELECT name as managerName FROM managers;`);
+                     const {mgrName} = await inquirer.prompt({
+                         name: 'mgrName',
+                         type: 'list',
+                         message: 'Who is the Employee\'s manager? Use self if they are the manager? ',
+                         choices: mgrs.map(mgr => ({name: mgr.managerName, value: mgr}) )
+                     })
+                 const dptId = await db.query(`SELECT departments.id as department
+                 FROM roles
+                 INNER JOIN departments ON departments.id = roles.department_id
+                 WHERE title = '${empRole.role}';`);
+                 const mgrId = await db.query(`SELECT id FROM managers WHERE name = \'${mgrName.managerName}\';`);    
+                 const roleId =  await db.query(`SELECT id FROM roles WHERE title = \'${empRole.role}\'; `)
+                 params =  await (`\"${fName.firstName}\", \"${lName.lastName}\", \"${roleId[0][0].id}\", \"${dptId[0][0].department}\", \"${mgrId[0][0].id}\"`);
+                 await db.query(`INSERT INTO employees (firstName,lastName,role_id, department_id, manager_id ) VALUES (${params});`);
+                 console.log(`${fName.firstName} ${lName.lastName} was added to the database.`)    
+             } catch (err) {
+                  console.log(err);
+                  process.exit(1);
+              }
+                 askQuestions();
+             }
 
 
 async function updateEmployee (){
     try {
-        
         const [empNames] = await db.query(`Select concat(firstName, " ", lastName) as employeeName, id
         FROM employees;`);
         const {upEmp} = await inquirer.prompt({
@@ -438,91 +326,51 @@ async function updateEmployee (){
    
 }
 
-function addRole(){
-    empDepArr = [];
-    let sql = `SELECT departments.name as department
-    FROM departments`;  
-       db.query(sql, (err, rows) => {
-         if (err) {
-             console.log(err);
-             
-             return;
-            }
-            rows.forEach( (row) =>{
-                empDepArr.push(row.department);
-               
-            }) 
-        })
-    const questions = [
-        {
-            type: 'input',
-                name: 'newRole',
-                message: 'What is the name of the role you wish to add? ',
-                validate(value) {
-                    const fails = value.match(
-                        /([0-9])/i
-                        );
-                        if (fails || value === "") {
-                            return 'Please enter in a valid role.';
-                            
-                        }
-                        return true;
-                    },
-                    filter(value) {
-                        value.toLowerCase();
-                        return value.charAt(0).toUpperCase() + value.slice(1);
-                    },
-                    
-        },
-        {
-                type: 'number',
-                name: 'newSalary',
-                message: 'What is the salary amount? ',
-        },
-        {
-            type: 'list',
-            name: 'roleDep',
-            message: 'Which department doe the role belong to? ',
-            choices: empDepArr,
-        },
-       
-    ];
-    inquirer.prompt(questions).then((answers) => {
-        tempAns = answers;
-    })
-    .then(() =>{
-        let tempArr = [];
-     let sql = ` SELECT id
-        FROM departments
-        WHERE name = \'${tempAns.roleDep}\';`;
-        db.query(sql, (err, rows) => {
-            if (err) {
-                console.log(err);
-                
-                return;
-            }
-            Object.keys(rows).forEach( function(key) {
-                let row = rows[key]
-                tempArr.push(row.id);
-                
-            }) 
-            daDep = tempArr[0];
-            let answers = tempAns;
-            params =  (`\"${answers.newRole}\", \"${daDep}\", \"${answers.newSalary}\"`);
-            
-            sql = `INSERT INTO roles (title, department_id, salary) VALUES (${params})`;
-           db.query(sql, (err, result) => {
-            if (err) {
-              console.log(err);
-            } else {
-              console.log(`${answers.newRole} was added to the database.`)
-              askQuestions();
-            }
-          });
-        })
-        });  
-    // askQuestions();
-}
+async function addRole(){
+    try {
+       const newRole = await inquirer.prompt({
+                  type: 'input',
+                  name: 'role',
+                  message: 'What is the name of the role you wish to add? ',
+                  validate(value) {
+                      const fails = value.match(
+                          /([0-9])/i
+                          );
+                          if (fails || value === "") {
+                              return 'Please enter in a valid role.';
+                              
+                          }
+                          return true;
+                      },
+                      filter(value) {
+                          value.toLowerCase();
+                          return value.charAt(0).toUpperCase() + value.slice(1);
+                      }, 
+                  })
+       const [departs] = await db.query(`SELECT departments.name as department
+       FROM departments;`)
+           const {daDep} = await inquirer.prompt({
+               name: 'daDep',
+               type: 'list',
+               message: 'Which department does the role belong to? ',
+               choices: departs.map(depart => ({name: depart.department, value: depart}) )
+            })
+       const newSalary = await inquirer.prompt({
+               type: 'number',
+               name: 'salary',
+               message: 'What is the salary amount? ',
+               })
+       const [deptId] = await db.query(` SELECT id
+       FROM departments
+       WHERE name = '${daDep.department}';`);
+       let params = await (`\"${newRole.role}\", \"${deptId[0][0].id}\", \"${newSalary.salary}\"`);
+       await db.query(`INSERT INTO roles (title, department_id, salary) VALUES (${params});`)
+       console.log(`${newRole.role} was added to the database.`)
+       askQuestions();
+    } catch (err) {
+       console.log(err);
+    }   
+   }  
 async function addDepartment(){
     try {
        const newDep = await inquirer.prompt({
