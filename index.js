@@ -1,6 +1,4 @@
 const inquirer = require('inquirer');
-// const db = require('./server');
-const sql = require('./index');
 const mysql = require('mysql2/promise');
 const express = require('express');
 const PORT = process.env.PORT || 3001;
@@ -270,51 +268,53 @@ async function updateEmployee (){
    
 }
 
+
 async function addRole(){
-    try {
-       const newRole = await inquirer.prompt({
-                  type: 'input',
-                  name: 'role',
-                  message: 'What is the name of the role you wish to add? ',
-                  validate(value) {
-                      const fails = value.match(
-                          /([0-9])/i
-                          );
-                          if (fails || value === "") {
-                              return 'Please enter in a valid role.';
-                              
-                          }
-                          return true;
-                      },
-                      filter(value) {
-                          value.toLowerCase();
-                          return value.charAt(0).toUpperCase() + value.slice(1);
-                      }, 
-                  })
-       const [departs] = await db.query(`SELECT departments.name as department
-       FROM departments;`)
-           const {daDep} = await inquirer.prompt({
-               name: 'daDep',
-               type: 'list',
-               message: 'Which department does the role belong to? ',
-               choices: departs.map(depart => ({name: depart.department, value: depart}) )
-            })
-       const newSalary = await inquirer.prompt({
-               type: 'number',
-               name: 'salary',
-               message: 'What is the salary amount? ',
+ try {
+    const db= await mysql.createConnection({host:'localhost', user: 'root', database: 'employees_db'});
+    const newRole = await inquirer.prompt({
+               type: 'input',
+               name: 'role',
+               message: 'What is the name of the role you wish to add? ',
+               validate(value) {
+                   const fails = value.match(
+                       /([0-9])/i
+                       );
+                       if (fails || value === "") {
+                           return 'Please enter in a valid role.';
+                           
+                       }
+                       return true;
+                   },
+                   filter(value) {
+                       value.toLowerCase();
+                       return value.charAt(0).toUpperCase() + value.slice(1);
+                   }, 
                })
-       const [deptId] = await db.query(` SELECT id
-       FROM departments
-       WHERE name = '${daDep.department}';`);
-       let params = await (`\"${newRole.role}\", \"${deptId[0][0].id}\", \"${newSalary.salary}\"`);
-       await db.query(`INSERT INTO roles (title, department_id, salary) VALUES (${params});`)
-       console.log(`${newRole.role} was added to the database.`)
-       askQuestions();
-    } catch (err) {
-       console.log(err);
-    }   
-   }  
+    const [departs] = await db.query(`SELECT departments.name as department
+    FROM departments;`);
+        const {daDep} = await inquirer.prompt({
+            name: 'daDep',
+            type: 'list',
+            message: 'Which department does the role belong to? ',
+            choices: departs.map(depart => ({name: depart.department, value: depart}) )
+         })
+    const newSalary = await inquirer.prompt({
+            type: 'number',
+            name: 'salary',
+            message: 'What is the salary amount? ',
+            })
+    const deptId = await db.query(` SELECT id
+    FROM departments
+    WHERE name = '${daDep.department}';`);
+    let params = await (`\"${newRole.role}\", \"${deptId[0][0].id}\", \"${newSalary.salary}\"`);
+    await db.query(`INSERT INTO roles (title, department_id, salary) VALUES (${params});`)
+    console.log(`${newRole.role} was added to the database.`)
+    askQuestions();
+ } catch (err) {
+    console.log(err);
+ }   
+}    
 async function addDepartment(){
     try {
        const newDep = await inquirer.prompt({
