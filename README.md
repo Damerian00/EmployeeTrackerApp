@@ -62,7 +62,7 @@
 
 <!-- ABOUT THE PROJECT -->
 ## About The Project
-  My work on this project was done on the back-end by using mySQl to make my requests to perform CDRUD opperations that would update a database of tables It uses node.js, mysql2, express, and inquirer to complete this task.
+  My work on this project was done on the back-end by using mySQl to make my requests to perform CDRUD operations that would update a database of tables It uses node.js, mysql2, express, and inquirer to complete this task.
 
 
 
